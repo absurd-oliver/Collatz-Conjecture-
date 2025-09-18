@@ -1,339 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Collatz Conjecture</title>
-  <style>
-    /* General page styling */
-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  margin: 40px;
-  padding: 0 20px;
-  font-family: Arial, sans-serif;
-  color: #333;
-  box-sizing: border-box;
-  background-color: grey;
+<html>
+  <head>
+    <title></title>
+  </head>
+  <body>
+      <input type='number' id="inputNum">
+      <br>
+      <br>
+      <button id='startButton' onclick="start()">start</button>
+      <button id='stopButton' onclick="stop()">stop</button>
+      <button id='resetButton' onclick="reset()">reset</button>
+      <br>
+      <p id='output'></p>
+          <script defer>
+const output = document.getElementById("output");
+const inputNum = document.getElementById("inputNum");
+
+var num = 0;
+var timeout = null;
+
+function start(){
+  num = inputNum.value;
+  output.textContent = num;
+  controlFlow(num);
 }
 
-/* Input and button styling */
-input, button {
-  font-size: 1.2rem;
-  padding: 12px 20px;
-  margin: 10px;
-  border-radius: 5px;
-  border: 1px solid #000000;
-  background-color: #ffffff;
-  color: #000000;
-  width: 100%;
-  max-width: 400px;
-  box-sizing: border-box;
+function stop(){
+  clearTimeout(timeout);
 }
 
-/* Output display styling */
-pre#textelem {
-  font-size: 1.2rem;
-  background-color: #ffffff;
-  padding: 20px;
-  margin-top: 20px;
-  border: 1px solid #000000;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 600px;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  text-align: left;
-  box-sizing: border-box;
+function reset(){
+  stop();
+  inputNum.value = '';
+  output.textContent = '';
+  num = 0;
 }
 
-/* Mobile tweaks */
-@media (max-width: 600px) {
-  body {
-    margin: 20px;
-    padding: 10px;
-  }
-
-  input, button {
-    font-size: 1rem;
-    padding: 10px 16px;
-  }
-
-  pre#textelem {
-    font-size: 1rem;
-    padding: 16px;
-  }
-}
-/* Leaderboard styling */
-table#leaderboard {
-  margin-top: 20px;
-  border-collapse: collapse;
-  width: 100%;
-  max-width: 600px;
-  text-align: center;
-  color: #ffffff;
+function finish(){
+  stop();
+  output.textContent += ', done';
 }
 
-table#leaderboard th,
-table#leaderboard td {
-  border: 1px solid #ffffff;
-  padding: 12px;
-  font-size: 1.1rem;
-  background-color: #111111;
-  vertical-align: top;
-}
-
-table#leaderboard th {
-  background-color: #222222;
-  font-weight: bold;
-}
-
-#highnum-list, #highsteps-list {
-  text-align: left;
-  white-space: pre-wrap;
-}
-
-pre#textelem2 {
-  font-size: 1.2rem;
-  background-color: #ffffff;
-  padding: 20px;
-  margin-top: 20px;
-  border: 1px solid #000000;
-  border-radius: 8px;
-  width: 100%;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  text-align: left;
-  box-sizing: border-box;
-}
-  </style>
-</head>
-<body>
-  <!-- Input -->
-  <input type="text" id="userin" placeholder="Enter a number" />
-  <button onclick="start()">Start</button>
-
-  <!-- Output -->
-  <pre id="textelem"></pre>
-
-  <!-- Leaderboard -->
-  <h2>Leaderboard</h2>
-  <table id="leaderboard">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Start Number</th>
-        <th>Max Number</th>
-        <th>Total Steps</th>
-      </tr>
-    </thead>
-    <tbody id="leaderboard-body"></tbody>
-  </table>
-<button id="reset-btn" onclick="resetLeaderboard()">Reset Leaderboard</button>
-<br><br><br><br><br><br><br><br><br><br><br><br>
-<button id="fib-btn" onclick='fibonacci()'> fibonacci series up until ... steps </button>
-<input type="text" id="userin2" placeholder="# steps (max 1477)" />
-<pre id="textelem2"></pre>
-<script>
-  // Convert words like "seventy four" or "one hundred twenty" to numbers
-function wordsToNumber(text) {
-  if (!text || typeof text !== 'string') return NaN;
-
-  const ones = {
-    zero: 0, one: 1, two: 2, three: 3, four: 4,
-    five: 5, six: 6, seven: 7, eight: 8, nine: 9
-  };
-
-  const teens = {
-    ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14,
-    fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19
-  };
-
-  const tens = {
-    twenty: 20, thirty: 30, forty: 40, fifty: 50,
-    sixty: 60, seventy: 70, eighty: 80, ninety: 90
-  };
-
-  const scales = {
-    thousand: 1000,
-    million: 1000000,
-    billion: 1000000000
-  };
-
-  text = text.toLowerCase().replace(/-/g, ' ').replace(/ +/g, ' ').trim();
-
-  // Handle numeric + scale combo like "1.2 million"
-  const numScaleMatch = text.match(/^([\d.]+)\s+(thousand|million|billion)$/);
-  if (numScaleMatch) {
-    const num = parseFloat(numScaleMatch[1]);
-    const scale = scales[numScaleMatch[2]];
-    const scaled = num * scale;
-    return Number.isInteger(scaled) ? scaled : NaN;
-  }
-
-  // Handle spelled out words like "two hundred fifty thousand"
-  const words = text.split(/\s+/);
-  let current = 0;
-  let total = 0;
-
-  for (let word of words) {
-    if (word === "and") continue;
-    else if (ones[word] !== undefined) current += ones[word];
-    else if (teens[word] !== undefined) current += teens[word];
-    else if (tens[word] !== undefined) current += tens[word];
-    else if (word === "hundred") current *= 100;
-    else if (scales[word]) {
-      current *= scales[word];
-      total += current;
-      current = 0;
+function controlFlow(){
+  timeout = setTimeout(() => {
+    //check whether number is even or odd
+    if (num%2 === 0){
+      even(num);
     } else {
-      return NaN;
+      odd(num);
     }
-  }
-
-  return total + current;
+  }, 50);
 }
 
-// Leaderboard setup
-let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
 
-function saveLeaderboardToStorage() {
-  localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+function even(){
+  num = num/2;
+  output.textContent += ' ,' + num;
+  check();
 }
 
-function updateLeaderboardDisplay() {
-  const tableBody = document.getElementById('leaderboard-body');
-  tableBody.innerHTML = '';
-
-  leaderboard.slice(0, 5).forEach((entry, index) => {
-    const row = document.createElement('tr');
-
-    row.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${entry.start}</td>
-      <td>${entry.max}</td>
-      <td>${entry.steps}</td>
-    `;
-
-    tableBody.appendChild(row);
-  });
+function odd(){
+  num = (3 * num) + 1;
+  output.textContent += ' ,' + num;
+  check();
 }
 
-// Conjecture logic
-function conjecture(n) {
-  let result = n + '\n';
-  let counter = 0;
-  let maxInSequence = n;
-  let original = n;
-
-  while (n !== 1) {
-    if (n % 2 === 0) {
-      n /= 2;
-    } else {
-      n = n * 3 + 1;
-    }
-    result += n + '\n';
-    counter += 1;
-    if (n > maxInSequence) maxInSequence = n;
-  }
-
-  leaderboard.push({ start: original, max: maxInSequence, steps: counter });
-
-  // Sort by steps first, then by highest number
-  leaderboard.sort((a, b) => {
-    if (b.steps === a.steps) {
-      return b.max - a.max;
-    }
-    return b.steps - a.steps;
-  });
-
-  // Remove duplicates based on starting number
-  leaderboard = leaderboard.filter((entry, index, self) =>
-    index === self.findIndex(e => e.start === entry.start)
-  ).slice(0, 5);
-
-  saveLeaderboardToStorage();
-  updateLeaderboardDisplay();
-
-  result += 'conjecture finished!';
-  result += '\nTotal steps: ' + counter;
-  return result;
-}
-
-// Start function
-function start() {
-  const rawInput = document.getElementById('userin').value;
-  let userinput = parseInt(rawInput);
-
-  if (isNaN(userinput)) {
-    userinput = wordsToNumber(rawInput);
-  }
-
-  const output = document.getElementById('textelem');
-  if (isNaN(userinput) || userinput < 1) {
-    output.textContent = 'Please enter a valid positive number!';
-    return;
-  }
-
-  output.textContent = conjecture(userinput);
-}
-
-let resetPending = false;
-
-function resetLeaderboard() {
-  const btn = document.getElementById('reset-btn');
-
-  if (!resetPending) {
-    btn.textContent = "Click again to confirm reset";
-    resetPending = true;
-
-    // Reset the button text back after 5 seconds if no confirmation
-    setTimeout(() => {
-      btn.textContent = "Reset Leaderboard";
-      resetPending = false;
-    }, 5000);
-
+function check(){
+  if (num != 1){
+    controlFlow();
   } else {
-    leaderboard = [];
-    saveLeaderboardToStorage();
-    updateLeaderboardDisplay();
-    btn.textContent = "Reset Leaderboard";
-    resetPending = false;
+    finish();
   }
 }
-
-// Initialize leaderboard on load
-updateLeaderboardDisplay();
-
-function fibonacci() {
-  const rawInput = document.getElementById('userin2').value;
-  let n = parseInt(rawInput);
-
-  const output2 = document.getElementById('textelem2');
-
-  if (isNaN(n) || n < 1) {
-    output2.textContent = 'Please enter a valid positive number!';
-    return;
-  }
-
-  let n1 = 0, n2 = 1, nextTerm;
-  let result = '';
-
-  for (let i = 1; i <= n; i++) {
-    result += n1 + (i < n ? ', ' : '');
-    nextTerm = n1 + n2;
-    n1 = n2;
-    n2 = nextTerm;
-  }
-
-  output2.textContent = result;
-}
-</script>
-</body>
+    </script>
+  </body>
 </html>
