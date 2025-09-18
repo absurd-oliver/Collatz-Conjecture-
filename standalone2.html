@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        textarea {
+            min-width: 90vw;
+            min-height: 50vh;
+            max-width: 90vw;
+            max-height: 70vh;
+            overflow-y: scroll;
+            field-sizing: content;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="number" id='numInput' placeholder="starting number">
+    <button onclick="colatz()">start</button><button onclick="stop()">stop</button><button onclick="reset()">reset</button>
+    <p>biggest number: <span id='bigNum'></span> | steps: <span id="steps"></span></p>
+    <textarea id='output'></textarea>
+    <script defer>
+        const output = document.getElementById("output");
+        const numInput = document.getElementById("numInput");
+        const speedRange = document.getElementById("speedRange");
+        const bigNum = document.getElementById("bigNum");
+        const stepsDisplay = document.getElementById("steps");
+
+        var num = 0;
+        var maxNum = 0;
+        var steps = 0;
+        var t = 1;
+        var interval1 = null;
+
+        function log(logs) {
+            if (output.textContent != '') {
+                output.textContent = logs + ", " + output.textContent;
+                bigNum.textContent = maxNum;
+                stepsDisplay.textContent = steps;
+            } else {
+                output.textContent = logs;
+            }
+        }
+
+        function colatz() {
+            clearInterval(interval1);
+            num = Math.round(numInput.value);
+            maxNum = 0;
+            steps = 0;
+            output.textContent = '';
+            bigNum.textContent = maxNum;
+            stepsDisplay.textContent = steps;
+            interval1 = setInterval(() => {
+                steps += 1;
+                evalNum();
+                log(num);
+                if (num != 1) {
+                    if (num === 0) {
+                        log('invalid integer:');
+                        stop();
+                    } else if (num % 2 === 0) {
+                        num /= 2;
+                    } else {
+                        num = (3 * num) + 1;
+                    }
+                } else {
+                    log('done');
+                    stop();
+                }
+            }, t);
+        }
+
+        function evalNum() {
+            if (maxNum < num) {
+                maxNum = num;
+            }
+        }
+
+        function stop() {
+            clearInterval(interval1);
+        }
+
+        function reset() {
+            num = 0;
+            numInput.value = 0;
+            maxNum = 0;
+            steps = 0;
+            output.textContent = '';
+            bigNum.textContent = maxNum;
+            stepsDisplay.textContent = steps;
+            clearInterval(interval1);
+        }
+
+        numInput.addEventListener('keydown', () => {
+            if (event.key === 'Enter') {
+                colatz();
+            }
+        });
+
+        function init() {
+            numInput.value = num;
+            bigNum.textContent = maxNum;
+            stepsDisplay.textContent = steps;
+        }
+
+        window.addEventListener("load", () => {
+            init();
+        });
+    </script>
+</body>
+
+</html>
