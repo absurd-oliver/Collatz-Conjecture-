@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            text-align: center;
+        }
+
+        .textareaClass {
+            min-width: 90vw;
+            min-height: 50vh;
+            max-width: 90vw;
+            max-height: 70vh;
+            overflow-y: scroll;
+            field-sizing: content;
+        }
+
+        #graphDiv {
+            display: flex;
+            flex-direction: row;
+            margin-left: 3vw;
+            margin-right: 3vw;
+        }
+
+        .coll {
+            max-width: 8vw;
+            min-width: 8vw;
+            max-height: 30vh;
+            field-sizing: content;
+            background-color: white;
+            background-blend-mode: multiply;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="number" id='numInput' placeholder="starting number">
+    <button onclick="colatz()">start</button><button onclick="stop()">stop</button><button onclick="reset()">reset</button><button onclick="randomize()">random</button>
+    <p>biggest number: <span id='bigNum'></span> | steps: <span id="steps"></span></p>
+    <textarea id='output' class="textareaClass"></textarea>
+    <div id='graphDiv'>
+        <textarea class="coll" id='col0' style="border-color: black;"></textarea>
+        <textarea class="coll" id='col1' style="border-color: black;"></textarea>
+        <textarea class="coll" id='col2' style="border-color: black;"></textarea>
+        <textarea class="coll" id='col3' style="border-color: black;"></textarea>
+        <textarea class="coll" id='col4' style="border-color: black;"></textarea>
+        <textarea class="coll" id='col5' style="border-color: black;"></textarea>
+        <textarea class="coll" id='col6' style="border-color: black;"></textarea>
+        <textarea class="coll" id='col7' style="border-color: black;"></textarea>
+        <textarea class="coll" id='col8' style="border-color: black;"></textarea>
+        <textarea class="coll" id='col9' style="border-color: black;"></textarea>
+    </div>
+    <script defer>
+        const output = document.getElementById("output");
+        const numInput = document.getElementById("numInput");
+        const speedRange = document.getElementById("speedRange");
+        const bigNum = document.getElementById("bigNum");
+        const stepsDisplay = document.getElementById("steps");
+
+        var numbers = [{
+            value: 0
+        }, {
+            value: 0
+        }, {
+            value: 0
+        }, {
+            value: 0
+        }, {
+            value: 0
+        }, {
+            value: 0
+        }, {
+            value: 0
+        }, {
+            value: 0
+        }, {
+            value: 0
+        }, {
+            value: 0
+        }];
+        var num = 0;
+        var maxNum = 0;
+        var steps = 0;
+        var t = 1;
+        var interval1 = null;
+
+        function log(logs) {
+            if (output.textContent != '') {
+                output.textContent = logs + ", " + output.textContent;
+                bigNum.textContent = maxNum;
+                stepsDisplay.textContent = steps;
+            } else {
+                output.textContent = logs;
+            }
+        }
+
+        function colatz() {
+            clearInterval(interval1);
+            num = Math.round(numInput.value);
+            maxNum = 0;
+            steps = 0;
+            numbers = [{
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }];
+            output.textContent = '';
+            bigNum.textContent = maxNum;
+            stepsDisplay.textContent = steps;
+            interval1 = setInterval(() => {
+                steps += 1;
+                evalNum();
+                log(num);
+                if (num != 1) {
+                    if (num === 0) {
+                        log('invalid integer:');
+                        stop();
+                    } else if (num % 2 === 0) {
+                        num /= 2;
+                        countNums(num);
+                    } else {
+                        num = (3 * num) + 1;
+                        countNums(num);
+                    }
+                } else {
+                    log('done');
+                    stop();
+                }
+            }, t);
+        }
+
+        function countNums(n) {
+            let numString = String(n);
+            for (let i = 0; i <= 9; i++) {
+                let count = numString.split(i).length - 1;
+                numbers[i].value += count;
+                document.getElementById("col" + i).textContent = i + 's: \n' + numbers[i].value;
+                computeColor();
+            }
+        }
+
+        function computeColor() {
+            const valuesWithNames = [{
+                    name: 'zero',
+                    value: numbers[0].value
+                },
+                {
+                    name: 'one',
+                    value: numbers[1].value
+                },
+                {
+                    name: 'two',
+                    value: numbers[2].value
+                },
+                {
+                    name: 'three',
+                    value: numbers[3].value
+                },
+                {
+                    name: 'four',
+                    value: numbers[4].value
+                },
+                {
+                    name: 'five',
+                    value: numbers[5].value
+                },
+                {
+                    name: 'six',
+                    value: numbers[6].value
+                },
+                {
+                    name: 'seven',
+                    value: numbers[7].value
+                },
+                {
+                    name: 'eight',
+                    value: numbers[8].value
+                },
+                {
+                    name: 'nine',
+                    value: numbers[9].value
+                },
+            ];
+
+            valuesWithNames.sort((a, b) => a.value - b.value);
+            let rank = valuesWithNames.map(item => item.name);
+            for (let i = 0; i <= 9; i++) {
+                let searchName = rank[i];
+                let r = Math.round(255 - ((255 * i) / 9));
+                let g = Math.round(0 + ((255 * i) / 9));
+                let b = (1 - (Math.abs(r - g) / 255)) * 255;
+                if (searchName === 'zero') {
+                    document.getElementById("col0").style.backgroundColor = `rgb(${r},${g},${b})`;
+                } else if (searchName === 'one') {
+                    document.getElementById("col1").style.backgroundColor = `rgb(${r},${g},${b})`;
+                } else if (searchName === 'two') {
+                    document.getElementById("col2").style.backgroundColor = `rgb(${r},${g},${b})`;
+                } else if (searchName === 'three') {
+                    document.getElementById("col3").style.backgroundColor = `rgb(${r},${g},${b})`;
+                } else if (searchName === 'four') {
+                    document.getElementById("col4").style.backgroundColor = `rgb(${r},${g},${b})`;
+                } else if (searchName === 'five') {
+                    document.getElementById("col5").style.backgroundColor = `rgb(${r},${g},${b})`;
+                } else if (searchName === 'six') {
+                    document.getElementById("col6").style.backgroundColor = `rgb(${r},${g},${b})`;
+                } else if (searchName === 'seven') {
+                    document.getElementById("col7").style.backgroundColor = `rgb(${r},${g},${b})`;
+                } else if (searchName === 'eight') {
+                    document.getElementById("col8").style.backgroundColor = `rgb(${r},${g},${b})`;
+                } else if (searchName === 'nine') {
+                    document.getElementById("col9").style.backgroundColor = `rgb(${r},${g},${b})`;
+                }
+            }
+        }
+
+        function randomize() {
+            let counter = 0;
+            let randomInt = setInterval(() => {
+                let n = Math.floor(Math.random() * 100000000);
+                let steps = 25;
+                if (counter <= steps) {
+                    numInput.value = n;
+                    counter += 1;
+                } else {
+                    numInput.value = n;
+                    clearInterval(randomInt);
+                }
+            }, 10);
+        }
+
+        function evalNum() {
+            if (maxNum < num) {
+                maxNum = num;
+            }
+        }
+
+        function stop() {
+            clearInterval(interval1);
+        }
+
+        function reset() {
+            num = 0;
+            numInput.value = 0;
+            maxNum = 0;
+            steps = 0;
+            output.textContent = '';
+            bigNum.textContent = maxNum;
+            stepsDisplay.textContent = steps;
+            clearInterval(interval1);
+            numbers = [{
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }, {
+                value: 0
+            }];
+            for (let i = 0; i <= 9; i++) {
+                document.getElementById("col" + i).textContent = i + 's: \n0';
+            }
+        }
+
+        numInput.addEventListener('keydown', () => {
+            if (event.key === 'Enter') {
+                colatz();
+            }
+        });
+
+
+        function init() {
+            numInput.value = num;
+            bigNum.textContent = maxNum;
+            stepsDisplay.textContent = steps;
+            for (let i = 0; i <= 9; i++) {
+                document.getElementById("col" + i).textContent = i + 's: \n' + numbers[i].value;
+                document.getElementById("col" + i).style.backgroundColor = 'white;';
+            }
+        }
+
+        window.addEventListener("load", () => {
+            init();
+        });
+    </script>
+</body>
+
+</html>
